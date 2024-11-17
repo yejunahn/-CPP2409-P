@@ -1,0 +1,107 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <limits> // for numeric_limits
+using namespace std;
+
+// 항공권 데이터 클래스
+class FlightData {
+public:
+    string country;        // 국가 이름
+    vector<int> prices;    // 과거 가격 데이터
+
+    // 생성자
+    FlightData(string countryName, vector<int> priceData) : country(countryName), prices(priceData) {}
+
+    // 평균 가격 계산 함수
+    double calculateAveragePrice() {
+        int total = 0;
+        for (int price : prices) {
+            total += price;
+        }
+        return prices.empty() ? 0 : static_cast<double>(total) / prices.size();
+    }
+
+    // 최저 가격 반환 함수
+    int getLowestPrice() {
+        int minPrice = numeric_limits<int>::max();
+        for (int price : prices) {
+            if (price < minPrice) {
+                minPrice = price;
+            }
+        }
+        return minPrice;
+    }
+};
+
+// 예측 알고리즘 클래스
+class PricePredictor {
+private:
+    vector<FlightData*> flightDataList; // FlightData 객체 포인터 벡터
+
+public:
+    // 데이터 추가 함수
+    void addFlightData(FlightData* data) {
+        flightDataList.push_back(data);
+    }
+
+    // 특정 국가의 최적 예약 시점 제안 함수
+    void suggestBestBookingTime(string targetCountry) {
+        for (FlightData* data : flightDataList) {
+            if (data->country == targetCountry) {
+                double avgPrice = data->calculateAveragePrice();
+                int lowestPrice = data->getLowestPrice();
+
+                cout << "Country: " << data->country << endl;
+                cout << "Average Price: $" << avgPrice << endl;
+                cout << "Lowest Price: $" << lowestPrice << endl;
+
+                if (lowestPrice < avgPrice * 0.8) {
+                    cout << "Suggestion: Book now to secure the lowest price!" << endl;
+                } else {
+                    cout << "Suggestion: Wait a bit longer; prices might drop." << endl;
+                }
+                return;
+            }
+        }
+        cout << "No data available for " << targetCountry << "." << endl;
+    }
+
+    // 모든 국가에 대해 최적 예약 시점 제안
+    void suggestForAllCountries() {
+        for (FlightData* data : flightDataList) {
+            suggestBestBookingTime(data->country);
+            cout << "--------------------------" << endl;
+        }
+    }
+};
+
+int main() {
+    // 과거 항공권 가격 데이터를 초기화
+    FlightData* korea = new FlightData("Korea", {200, 180, 210, 190, 220});
+    FlightData* japan = new FlightData("Japan", {300, 320, 310, 330, 340});
+    FlightData* usa = new FlightData("USA", {800, 780, 820, 810, 790});
+
+    // PricePredictor 객체 생성
+    PricePredictor predictor;
+
+    // 데이터를 PricePredictor에 추가
+    predictor.addFlightData(korea);
+    predictor.addFlightData(japan);
+    predictor.addFlightData(usa);
+
+    // 사용자 입력받기
+    string country;
+    cout << "Enter a country to check prices: ";
+    cin >> country;
+
+    // 예측 수행
+    predictor.suggestBestBookingTime(country);
+
+    // 메모리 해제
+    delete korea;
+    delete japan;
+    delete usa;
+
+    return 0;
+}
